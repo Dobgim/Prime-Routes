@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard - Prime Routes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+  <!-- Login Overlay -->
+  <div id="loginOverlay" class="login-overlay">
+    <div class="login-box">
+      <div style="background:#e8a924; width:60px; height:60px; border-radius:12px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-weight:800; font-size:1.5rem; color:#0a1628;">PR</div>
+      <h2>Admin Login</h2>
+      <p>Enter the admin password to access the dashboard.</p>
+      <input type="password" id="adminPassword" placeholder="Password (admin123)">
+      <button onclick="loginAdmin()">Login to Dashboard</button>
+      <p id="loginError" style="color:red; display:none; margin-top:10px; font-size:0.9rem;">Incorrect password.</p>
+    </div>
+  </div>
+
+  <!-- Dashboard Layout -->
+  <div class="admin-layout" id="adminLayout" style="display:none;">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>Prime<span>Routes</span></h2>
+        <p>Logistics Admin Panel</p>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="active" onclick="showTab('dashboard', this)"><i class="fas fa-chart-line"></i> Dashboard</a>
+        <a href="#" onclick="showTab('shipments', this)"><i class="fas fa-box"></i> Shipments</a>
+        <a href="#" onclick="showTab('messages', this)"><i class="fas fa-envelope"></i> Messages</a>
+        <a href="index.html" style="margin-top:auto;"><i class="fas fa-globe"></i> View Website</a>
+        <a href="#" onclick="logoutAdmin()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="top-header">
+        <h1 id="pageTitle">Dashboard Overview</h1>
+        <div class="header-right">
+          <span id="currentTime" style="color:#666; font-size:0.9rem; font-weight:500;"></span>
+        </div>
+      </header>
+
+      <div class="content-wrapper">
+        <!-- Dashboard Tab -->
+        <div id="tab-dashboard" class="tab-pane active">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <i class="fas fa-boxes stat-icon"></i>
+              <div class="stat-info">
+                <h3 id="statTotal">0</h3>
+                <p>Total Shipments</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <i class="fas fa-truck-fast stat-icon" style="color:#e8a924; background:rgba(232,169,36,0.1);"></i>
+              <div class="stat-info">
+                <h3 id="statActive">0</h3>
+                <p>Active Shipments</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <i class="fas fa-envelope stat-icon" style="color:#28a745; background:rgba(40,167,69,0.1);"></i>
+              <div class="stat-info">
+                <h3 id="statMessages">0</h3>
+                <p>New Messages</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="recent-section">
+             <h2 style="margin-bottom:15px; color:#0a1628;">Recent Shipments</h2>
+             <div class="table-container">
+               <table class="data-table" id="recentTable">
+                 <thead>
+                   <tr>
+                     <th>Tracking ID</th>
+                     <th>Status</th>
+                     <th>Destination</th>
+                     <th>ETA</th>
+                   </tr>
+                 </thead>
+                 <tbody></tbody>
+               </table>
+             </div>
+          </div>
+        </div>
+
+        <!-- Shipments Tab -->
+        <div id="tab-shipments" class="tab-pane">
+          <div class="action-bar">
+            <input type="text" id="searchShipment" placeholder="Search by Tracking ID or Sender..." onkeyup="renderShipments()">
+            <button class="btn-add" onclick="openModal()"><i class="fas fa-plus"></i> New Shipment</button>
+          </div>
+          <div class="table-container">
+            <table class="data-table" id="shipmentsTable">
+              <thead>
+                <tr>
+                  <th>Tracking ID</th>
+                  <th>Sender Origin</th>
+                  <th>Receiver Destination</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Messages Tab -->
+        <div id="tab-messages" class="tab-pane">
+          <div class="table-container">
+            <table class="data-table" id="messagesTable">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Message</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div id="shipmentModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add New Shipment</h2>
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+      </div>
+      <div class="modal-body" style="max-height: calc(100vh - 140px); overflow-y: auto;">
+        <form id="shipmentForm">
+          <input type="hidden" id="shipmentIndex">
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tracking ID *</label>
+              <input type="text" id="shipId" placeholder="Auto-generated" required>
+            </div>
+            <div class="form-group">
+              <label>Shipment Type *</label>
+              <select id="shipType" required>
+                <option value="" disabled selected>Select type</option>
+                <option value="Air Freight">Air Freight</option>
+                <option value="Sea Freight">Sea Freight</option>
+                <option value="Land Transport">Land Transport</option>
+                <option value="Pet Cargo">Pet Cargo</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Sender Name *</label>
+              <input type="text" id="shipSenderName" placeholder="Sender name" required>
+            </div>
+            <div class="form-group">
+              <label>Receiver Name *</label>
+              <input type="text" id="shipReceiverName" placeholder="Receiver name" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Sender Email</label>
+              <input type="email" id="shipSenderEmail" placeholder="sender@example.com">
+            </div>
+            <div class="form-group">
+              <label>Receiver Email</label>
+              <input type="email" id="shipReceiverEmail" placeholder="receiver@example.com">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Sender Number</label>
+              <input type="text" id="shipSenderPhone" placeholder="e.g. +1 234 567 8900">
+            </div>
+            <div class="form-group">
+              <label>Receiver Number</label>
+              <input type="text" id="shipReceiverPhone" placeholder="e.g. +1 987 654 3210">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Origin *</label>
+              <input type="text" id="shipOrigin" placeholder="City, Country" required>
+            </div>
+            <div class="form-group">
+              <label>Destination *</label>
+              <input type="text" id="shipDestination" placeholder="City, Country" required>
+            </div>
+          </div>
+
+          <!-- Waypoints Area -->
+          <div class="dynamic-list-container">
+             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <label style="margin:0;"><i class="fas fa-map-marker-alt" style="color:#e8a924;"></i> Route Waypoints <small style="color:#888;font-weight:400;">(Intermediate stops)</small></label>
+                <button type="button" class="btn-sm" onclick="addWaypoint()"><i class="fas fa-plus"></i> Add Stop</button>
+             </div>
+             <p style="font-size:0.8rem; color:#888; margin-bottom:15px; border-bottom:1px dashed #eee; padding-bottom:15px;">Add every country or city the package passes through. Toggle "Pause Here" to freeze the map marker at that location.</p>
+             <div id="waypointsList"></div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Weight (kg) *</label>
+              <input type="number" step="0.1" id="shipWeight" placeholder="0.0" required>
+            </div>
+            <div class="form-group">
+              <label>Status *</label>
+              <select id="shipStatus" required>
+                <option value="Pending">Pending</option>
+                <option value="In Transit">In Transit</option>
+                <option value="At Customs">At Customs</option>
+                <option value="Out for Delivery">Out for Delivery</option>
+                <option value="Delivered">Delivered</option>
+                <option value="On Hold">On Hold</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Ship Date *</label>
+              <input type="date" id="shipDate" required>
+            </div>
+            <div class="form-group">
+              <label>Expected Delivery Date</label>
+              <input type="date" id="shipExpectedDate">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Expected Delivery Time</label>
+              <input type="time" id="shipExpectedTime">
+            </div>
+            <div class="form-group">
+              <label>Piece Type</label>
+              <input type="text" id="shipPieceType" placeholder="e.g. Carton, Crate, Pallet">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom:24px;">
+            <label>Package Description</label>
+            <textarea id="shipDetails" placeholder="Describe the package contents..." rows="3" style="width:100%; padding:14px; border:2px solid #eee; border-radius:8px; font-family:inherit; resize:vertical; outline:none; transition:0.3s;" onfocus="this.style.borderColor='#e8a924'" onblur="this.style.borderColor='#eee'"></textarea>
+          </div>
+
+          <!-- Timeline Events Area -->
+          <div class="dynamic-list-container">
+             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <label style="margin:0;"><i class="fas fa-clock" style="color:#e8a924;"></i> Timeline Events</label>
+                <button type="button" class="btn-sm" onclick="addTimelineEvent()"><i class="fas fa-plus"></i> Add Event</button>
+             </div>
+             <div id="timelineList"></div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn-save"><i class="fas fa-save"></i> Save Shipment</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>
