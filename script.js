@@ -327,21 +327,36 @@ async function handleMainTrack() {
   const code = input.value.trim();
   if (code.length < 4) {
     errorMsg.style.display = 'block';
+    errorMsg.textContent = 'Please enter a valid tracking code.';
     receipt.style.display = 'none';
     return;
   }
   errorMsg.style.display = 'none';
   receipt.style.display = 'none';
-  const btn = input.nextElementSibling;
-  const originalText = btn.innerHTML;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Locating...';
-  btn.disabled = true;
+  const btn = document.querySelector('button[onclick="handleMainTrack()"]') || input.nextElementSibling;
+  const originalText = btn ? btn.innerHTML : '';
+  if(btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Locating...'; btn.disabled = true; }
+
+  // Check if Supabase client exists
+  if (typeof sb === 'undefined') {
+    if(btn) { btn.innerHTML = originalText; btn.disabled = false; }
+    errorMsg.style.display = 'block';
+    errorMsg.textContent = 'Connection error. Please refresh and try again.';
+    return;
+  }
 
   try {
     const { data: results, error } = await sb.from('shipments').select('*').ilike('id', code);
+    if(btn) { btn.innerHTML = originalText; btn.disabled = false; }
+
+    if (error) {
+      errorMsg.style.display = 'block';
+      errorMsg.textContent = 'Database error. Please try again.';
+      console.error('Supabase error:', error);
+      return;
+    }
+
     const found = (results && results.length > 0) ? results[0] : null;
-    btn.innerHTML = originalText;
-    btn.disabled = false;
 
     const codeDisplay        = document.getElementById('receiptCode');
     const dateDisplay        = document.getElementById('receiptDate');
@@ -361,9 +376,9 @@ async function handleMainTrack() {
     const weightDisplay      = document.getElementById('receiptWeight');
     const shipDateDisplay    = document.getElementById('receiptShipDate');
     const mapLabel           = document.getElementById('mapLocationLabel');
-    codeDisplay.textContent = code.toUpperCase();
+    if(codeDisplay) codeDisplay.textContent = code.toUpperCase();
     const today = new Date();
-    dateDisplay.textContent = today.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+    if(dateDisplay) dateDisplay.textContent = today.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
     if (found) {
       const statusLower = (found.status || '').toLowerCase();
       let statusIcon = 'fa-truck-fast', statusColor = '#1a73e8', dotColor = '#1a73e8';
@@ -372,8 +387,7 @@ async function handleMainTrack() {
       else if(statusLower.includes('out for'))   { statusIcon='fa-motorcycle';     statusColor='#9b59b6'; dotColor='#9b59b6'; }
       else if(statusLower.includes('hold'))      { statusIcon='fa-pause-circle';   statusColor='#e74c3c'; dotColor='#e74c3c'; }
       else if(statusLower.includes('pending'))   { statusIcon='fa-hourglass-half'; statusColor='#f39c12'; dotColor='#f39c12'; }
-      statusDisplay.innerHTML = `<i class="fas ${statusIcon}"></i> ${found.status}`;
-      statusDisplay.style.color = statusColor;
+      if(statusDisplay){ statusDisplay.innerHTML = `<i class="fas ${statusIcon}"></i> ${found.status}`; statusDisplay.style.color = statusColor; }
       if(statusDot){ statusDot.style.background=dotColor; statusDot.style.boxShadow=`0 0 0 3px ${dotColor}33`; }
       let etaText = found.eta || found.expectedDate || '—';
       if(found.expectedDate){
@@ -381,7 +395,7 @@ async function handleMainTrack() {
         etaText = !isNaN(etaDate) ? etaDate.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) : found.expectedDate;
         if(found.expectedTime) etaText += ' at '+found.expectedTime;
       }
-      etaDisplay.textContent = etaText;
+      if(etaDisplay) etaDisplay.textContent = etaText;
       if(senderNameDisplay)    senderNameDisplay.textContent    = found.senderName   || found.sender   || '—';
       if(senderEmailDisplay)   senderEmailDisplay.textContent   = found.senderEmail  || '';
       if(senderPhoneDisplay)   senderPhoneDisplay.textContent   = found.senderPhone  || '';
@@ -429,35 +443,31 @@ async function handleMainTrack() {
         });
         timelineSection.style.display='block';
       } else if(timelineSection){timelineSection.style.display='none';}
-      // Initialize live animated map
       const mapLabel2=document.getElementById('mapLocationLabel');
-      let mapQuery=found.destination||found.receiver||'Nashville, TN';
-      if(found.waypoints&&found.waypoints.length>0){const paused=found.waypoints.find(w=>w.pause);mapQuery=paused?paused.location:found.waypoints[found.waypoints.length-1].location;}
       if(mapLabel2) mapLabel2.textContent=found.destination||found.receiver||'';
       initLiveMap(found, code.toUpperCase());
     } else {
-      statusDisplay.innerHTML=`<i class="fas fa-times-circle"></i> Not Found`;
-      statusDisplay.style.color='#e74c3c';
+      if(statusDisplay){ statusDisplay.innerHTML=`<i class="fas fa-times-circle"></i> Not Found`; statusDisplay.style.color='#e74c3c'; }
       if(statusDot){statusDot.style.background='#e74c3c';statusDot.style.boxShadow='0 0 0 3px rgba(231,76,60,0.2)';}
-      etaDisplay.textContent='—';
+      if(etaDisplay) etaDisplay.textContent='—';
       [senderNameDisplay,senderEmailDisplay,senderPhoneDisplay,senderDisplay,receiverNameDisplay,receiverEmailDisplay,receiverPhoneDisplay,receiverDisplay,typeDisplay,weightDisplay,shipDateDisplay].forEach(el=>{if(el)el.textContent='—';});
       if(detailsDisplay) detailsDisplay.textContent='This tracking code was not found. Please check and try again.';
       const ws=document.getElementById('receiptWaypointsSection'); if(ws)ws.style.display='none';
       const ts=document.getElementById('receiptTimelineSection');  if(ts)ts.style.display='none';
-      stopBusAnimation();
+      if(typeof stopBusAnimation === 'function') stopBusAnimation();
     }
     receipt.style.display='block';
     setTimeout(()=>receipt.scrollIntoView({behavior:'smooth',block:'start'}),100);
   } catch (err) {
-    btn.innerHTML = originalText;
-    btn.disabled = false;
+    if(btn) { btn.innerHTML = originalText; btn.disabled = false; }
     errorMsg.style.display = 'block';
-    errorMsg.textContent = 'Tracking ID not found or error occurred.';
-    console.error('Main track error:', err);
+    errorMsg.textContent = 'Connection error. Please check your internet and try again.';
+    console.error('Track error:', err);
   }
 }
 
 const mainTrackInput = document.getElementById('mainTrackInput');
+
 if(mainTrackInput){
   mainTrackInput.addEventListener('keypress', function(e){
     if(e.key==='Enter') handleMainTrack();
