@@ -531,39 +531,72 @@ function getMapProgress(code) {
   return data[code] || 0;
 }
 
+let animationFrameId = null;
+
 function stopBusAnimation() {
   isAnimating = false;
   if (animInterval) { clearInterval(animInterval); animInterval = null; }
+  if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
 }
 
 function startBusAnimation() {
   if (isAnimating || routePath.length === 0) return;
   isAnimating = true;
-  animInterval = setInterval(() => {
-    if (!isAnimating) { clearInterval(animInterval); animInterval = null; return; }
-    if (currentStep < routePath.length - 1) {
-      currentStep++;
-      const pos = routePath[currentStep];
-      if (busMarker) {
-        busMarker.setPosition(pos);
-        // Rotate SVG based on heading
-        if (currentStep > 0 && typeof google !== 'undefined') {
-          const prev = routePath[currentStep - 1];
-          const heading = google.maps.geometry.spherical.computeHeading(prev, pos);
-          const rotatedSVG = CARGO_SVG.replace('<svg ', `<svg style="transform:rotate(${heading}deg);transform-origin:center;" `);
-          busMarker.setIcon({
-            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(rotatedSVG),
-            scaledSize: new google.maps.Size(72, 42),
-            anchor: new google.maps.Point(36, 36)
-          });
-        }
-      }
-      if (liveMap) liveMap.panTo(pos);
-      saveMapProgress(activeTrackCode, currentStep);
-    } else {
-      stopBusAnimation();
+  
+  let lastTime = performance.now();
+  // Very slow and smooth speed (adjust this number to change speed: lower = slower)
+  const SPEED_STEPS_PER_SECOND = 1.0; 
+
+  function animate(time) {
+    if (!isAnimating) return;
+    
+    const delta = (time - lastTime) / 1000; // in seconds
+    lastTime = time;
+    
+    currentStep += SPEED_STEPS_PER_SECOND * delta;
+    
+    if (currentStep >= routePath.length - 1) {
+      currentStep = routePath.length - 1;
+      isAnimating = false;
     }
-  }, 2500); // Increased from 1000 to 2500 to slow down the cargo bus speed significantly
+    
+    const index = Math.floor(currentStep);
+    const nextIndex = Math.min(index + 1, routePath.length - 1);
+    const fraction = currentStep - index;
+    
+    const p1 = routePath[index];
+    const p2 = routePath[nextIndex];
+    
+    // Smoothly interpolate between the two points so it never "skips"
+    const pos = google.maps.geometry.spherical.interpolate(p1, p2, fraction);
+    
+    if (busMarker) {
+      busMarker.setPosition(pos);
+      if (typeof google !== 'undefined' && index < routePath.length - 1) {
+        // Calculate heading to point the bus forward
+        const heading = google.maps.geometry.spherical.computeHeading(p1, p2);
+        const rotatedSVG = CARGO_SVG.replace('<svg ', `<svg style="transform:rotate(${heading}deg);transform-origin:center;" `);
+        busMarker.setIcon({
+          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(rotatedSVG),
+          scaledSize: new google.maps.Size(72, 42),
+          anchor: new google.maps.Point(36, 36)
+        });
+      }
+    }
+    
+    if (liveMap) liveMap.panTo(pos);
+    
+    // Save progress occasionally so it resumes correctly on refresh
+    if (Math.floor(currentStep) % 2 === 0) {
+      saveMapProgress(activeTrackCode, Math.floor(currentStep));
+    }
+    
+    if (isAnimating) {
+      animationFrameId = requestAnimationFrame(animate);
+    }
+  }
+  
+  animationFrameId = requestAnimationFrame(animate);
 }
 
 function initLiveMap(found, code) {
