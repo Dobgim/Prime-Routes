@@ -140,79 +140,90 @@ counters.forEach(c => counterObserver.observe(c));
 const contactForm = document.getElementById('contactForm');
 const formSuccess = document.getElementById('formSuccess');
 
-contactForm.addEventListener('submit', function(e) {
-  e.preventDefault();
-  let valid = true;
+if (contactForm) {
+  contactForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    let valid = true;
 
-  // Validate fields
-  const name = this.querySelector('[name="name"]');
-  const email = this.querySelector('[name="email"]');
-  const message = this.querySelector('[name="message"]');
+    // Validate fields
+    const name = this.querySelector('[name="name"]');
+    const email = this.querySelector('[name="email"]');
+    const message = this.querySelector('[name="message"]');
 
-  // Reset
-  this.querySelectorAll('.form-group').forEach(g => g.classList.remove('invalid'));
+    // Reset
+    this.querySelectorAll('.form-group').forEach(g => g.classList.remove('invalid'));
 
-  if (!name.value.trim()) {
-    name.closest('.form-group').classList.add('invalid');
-    valid = false;
-  }
+    if (!name.value.trim()) {
+      name.closest('.form-group').classList.add('invalid');
+      valid = false;
+    }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email.value.trim() || !emailRegex.test(email.value)) {
-    email.closest('.form-group').classList.add('invalid');
-    valid = false;
-  }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.value.trim() || !emailRegex.test(email.value)) {
+      email.closest('.form-group').classList.add('invalid');
+      valid = false;
+    }
 
-  if (!message.value.trim()) {
-    message.closest('.form-group').classList.add('invalid');
-    valid = false;
-  }
+    if (!message.value.trim()) {
+      message.closest('.form-group').classList.add('invalid');
+      valid = false;
+    }
 
-  if (!valid) return;
+    if (!valid) return;
 
-  // Save to Supabase
-  const submitBtn = contactForm.querySelector('button[type="submit"]');
-  let originalBtnContent = 'Send Message';
-  if (submitBtn) {
-    originalBtnContent = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-    submitBtn.disabled = true;
-  }
+    // Save to Supabase
+    const submitBtn = contactForm.querySelector('button[type="submit"]');
+    let originalBtnContent = 'Send Message';
+    if (submitBtn) {
+      originalBtnContent = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+      submitBtn.disabled = true;
+    }
 
-  sb.from('contacts').insert([{
-    name: name.value.trim(),
-    email: email.value.trim(),
-    message: message.value.trim(),
-    date: new Date().toISOString()
-  }]).then(() => {
-    // Show success
-    contactForm.style.display = 'none';
-    formSuccess.style.display = 'block';
+    if (typeof sb !== 'undefined') {
+      sb.from('contacts').insert([{
+        name: name.value.trim(),
+        email: email.value.trim(),
+        message: message.value.trim(),
+        date: new Date().toISOString()
+      }]).then(() => {
+        // Show success
+        contactForm.style.display = 'none';
+        if(formSuccess) formSuccess.style.display = 'block';
 
-    // Reset after 4 seconds
-    setTimeout(() => {
-      contactForm.style.display = 'block';
-      formSuccess.style.display = 'none';
-      contactForm.reset();
+        // Reset after 4 seconds
+        setTimeout(() => {
+          contactForm.style.display = 'block';
+          if(formSuccess) formSuccess.style.display = 'none';
+          contactForm.reset();
+          if (submitBtn) {
+            submitBtn.innerHTML = originalBtnContent;
+            submitBtn.disabled = false;
+          }
+        }, 4000);
+      }).catch(err => {
+        console.error('Error saving contact:', err);
+        if (submitBtn) {
+          submitBtn.innerHTML = originalBtnContent;
+          submitBtn.disabled = false;
+        }
+        alert('Failed to send message. Please try again.');
+      });
+    } else {
+      alert('Connection error. Cannot send message right now.');
       if (submitBtn) {
         submitBtn.innerHTML = originalBtnContent;
         submitBtn.disabled = false;
       }
-    }, 4000);
-  }).catch(err => {
-    console.error('Error saving contact:', err);
-    if (submitBtn) {
-      submitBtn.innerHTML = originalBtnContent;
-      submitBtn.disabled = false;
     }
-    alert('Failed to send message. Please try again.');
   });
-});
+}
 
 /* ========== TRACK SHIPMENT ========== */
 async function handleTrack() {
   const input = document.getElementById('trackInput');
   const result = document.getElementById('trackResult');
+  if(!input || !result) return;
   const trackingId = input.value.trim();
 
   if (!trackingId) {
@@ -226,8 +237,15 @@ async function handleTrack() {
   result.style.color = 'var(--accent)';
   result.textContent = '⏳ Searching...';
 
+  if (typeof sb === 'undefined') {
+    result.style.color = '#e74c3c';
+    result.textContent = `❌ Database connection error.`;
+    return;
+  }
+
   try {
-    const { data: found, error } = await sb.from('shipments').select('*').ilike('id', trackingId).single();
+    const { data: results, error } = await sb.from('shipments').select('*').ilike('id', trackingId);
+    const found = (results && results.length > 0) ? results[0] : null;
     if (found) {
       result.style.color = '#28a745';
       result.textContent = `✅ Status: ${found.status} | ETA: ${found.eta || found.expectedDate || '—'}`;
@@ -237,15 +255,18 @@ async function handleTrack() {
     }
   } catch (err) {
     result.style.color = '#e74c3c';
-    result.textContent = `❌ Tracking ID not found or error occurred.`;
+    result.textContent = `❌ Error occurred while searching.`;
     console.error('Track err:', err);
   }
 }
 
 // Allow Enter key for tracking
-document.getElementById('trackInput').addEventListener('keypress', function(e) {
-  if (e.key === 'Enter') handleTrack();
-});
+const trackInput = document.getElementById('trackInput');
+if (trackInput) {
+  trackInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') handleTrack();
+  });
+}
 
 /* ========== SMOOTH SCROLL FOR ANCHORS ========== */
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
