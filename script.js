@@ -563,7 +563,7 @@ function startBusAnimation() {
     } else {
       stopBusAnimation();
     }
-  }, 1000); // Increased from 280 to 1000 to slow down the cargo bus speed
+  }, 2500); // Increased from 1000 to 2500 to slow down the cargo bus speed significantly
 }
 
 function initLiveMap(found, code) {
