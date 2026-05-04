@@ -338,7 +338,8 @@ async function handleMainTrack() {
   btn.disabled = true;
 
   try {
-    const { data: found, error } = await sb.from('shipments').select('*').ilike('id', code).single();
+    const { data: results, error } = await sb.from('shipments').select('*').ilike('id', code);
+    const found = (results && results.length > 0) ? results[0] : null;
     btn.innerHTML = originalText;
     btn.disabled = false;
 
