@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="100" fill="#e8a924"/>
+  <text x="256" y="320" font-family="'Inter', Arial, sans-serif" font-weight="800" font-size="200" fill="#0a1628" text-anchor="middle">PLC</text>
+  <path d="M156 360 L356 360 L256 440 Z" fill="#0a1628"/>
+</svg>

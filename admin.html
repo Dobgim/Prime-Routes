@@ -2,17 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Dashboard - Prime Routes</title>
+  <title>Admin Dashboard - Prime Logistics Cargo</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="admin.css">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 </head>
 <body>
 
   <!-- Login Overlay -->
   <div id="loginOverlay" class="login-overlay">
     <div class="login-box">
-      <div style="background:#e8a924; width:60px; height:60px; border-radius:12px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-weight:800; font-size:1.5rem; color:#0a1628;">PR</div>
+      <div style="background:#e8a924; width:60px; height:60px; border-radius:12px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-weight:800; font-size:1.5rem; color:#0a1628;">PLC</div>
       <h2>Admin Login</h2>
       <p>Enter the admin password to access the dashboard.</p>
       <input type="password" id="adminPassword" placeholder="Password (admin123)">
@@ -26,7 +28,7 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <h2>Prime<span>Routes</span></h2>
+        <h2>Prime<span>Logistics Cargo</span></h2>
         <p>Logistics Admin Panel</p>
       </div>
       <nav class="sidebar-nav">
@@ -103,9 +105,10 @@
               <thead>
                 <tr>
                   <th>Tracking ID</th>
-                  <th>Sender Origin</th>
-                  <th>Receiver Destination</th>
+                  <th>Sender Name</th>
+                  <th>Receiver Name</th>
                   <th>Status</th>
+                  <th>Expected Delivery</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -281,6 +284,15 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script type="text/javascript">
+    (function() {
+      // Initialize EmailJS with your Public Key
+      emailjs.init("7AjQGyp0tZ_33Ed9w");
+    })();
+  </script>
+  <script src="supabase-init.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>

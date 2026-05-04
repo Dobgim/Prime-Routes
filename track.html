@@ -3,27 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Track Shipment - Prime Routes Logistics</title>
-  <meta name="description" content="Real Time Tracking For Packages, Deliveries & Pets Across The World. Prime Route Logistics – Top transport & logistics company with 10,000+ reviews.">
+  <title>Track Shipment - Prime Logistics Cargo</title>
+  <meta name="description" content="Real Time Tracking For Packages, Deliveries & Pets Across The World. Prime Logistics Cargo – Top transport & logistics company with 10,000+ reviews.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <!-- Smartsupp Live Chat -->
+  <script type="text/javascript">
+    var _smartsupp = _smartsupp || {};
+    _smartsupp.key = 'd55df2b734af3c4f59930ea36992e229092a4607';
+    window.smartsupp||(function(d) {
+      var s,c,o=smartsupp=function(){ o._.push(arguments)};o._=[];
+      s=d.getElementsByTagName('script')[0];c=d.createElement('script');
+      c.type='text/javascript';c.charset='utf-8';c.async=true;
+      c.src='https://www.smartsuppchat.com/loader.js?';s.parentNode.insertBefore(c,s);
+    })(document);
+  </script>
 </head>
 <body>
 
-<!-- Preloader -->
-<div id="preloader">
-  <div class="loader-ring"></div>
-</div>
+
 
 <!-- Navbar -->
 <nav class="navbar" id="navbar">
   <div class="container nav-inner">
     <a href="#" class="nav-logo">
-      <div class="nav-logo-icon">PR</div>
-      <div class="nav-logo-text">Prime<span>Routes</span></div>
+      <div class="nav-logo-icon" style="background:transparent; padding:0;"><img src="logo.svg" style="width:100%;height:100%;object-fit:contain;border-radius:12px;"></div>
+      <div class="nav-logo-text">Prime<span>Logistics Cargo</span></div>
     </a>
     <div class="nav-links" id="navLinks">
       <a href="index.html" class="active">Home</a>
@@ -98,51 +108,133 @@
       <!-- Error Message -->
       <p id="trackErrorMsg" style="color:var(--red); text-align:center; display:none; margin-top:-20px; margin-bottom:20px;">Please enter a valid tracking code.</p>
 
-      <!-- Hidden Invoice/Result Area -->
-      <div id="trackingReceipt" class="reveal" style="display:none; border:2px dashed var(--gray-200); border-radius:var(--radius-sm); padding:30px">
-         <div style="text-align:center; margin-bottom:24px;">
-           <div class="nav-logo-icon" style="margin:0 auto 10px;">PR</div>
-           <h3 style="color:var(--primary); font-size:1.5rem; margin-bottom:4px;">Invoice Receipt</h3>
-           <p style="color:var(--gray-500); font-size:.9rem;">Prime Routes Logistics Tracking System</p>
-         </div>
-         
-         <div style="background:var(--gray-50); padding:20px; border-radius:var(--radius-sm); margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
-           <div>
-             <p style="font-size:0.85rem; color:var(--gray-500); margin-bottom:4px;">Current Status</p>
-             <h4 id="receiptStatus" style="color:var(--green); font-size:1.2rem; display:flex; align-items:center; gap:8px;"><i class="fas fa-truck-fast"></i> In Transit</h4>
-           </div>
-           <div style="text-align:right;">
-             <p style="font-size:0.85rem; color:var(--gray-500); margin-bottom:4px;">Date Issued</p>
-             <h4 id="receiptDate" style="font-size:1rem; font-weight:600;"></h4>
-           </div>
-         </div>
+      <!-- Professional Invoice/Result Area -->
+      <div id="trackingReceipt" style="display:none;">
 
-         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:24px; margin-bottom:30px;">
-           <div>
-             <p style="font-size:0.85rem; color:var(--gray-500); margin-bottom:4px;">Tracking Code</p>
-             <h4 id="receiptCode" style="font-size:1.1rem; font-family:monospace; background:rgba(232,169,36,.1); color:var(--accent); display:inline-block; padding:4px 10px; border-radius:4px;"></h4>
-           </div>
-           <div>
-             <p style="font-size:0.85rem; color:var(--gray-500); margin-bottom:4px;">Estimated Delivery</p>
-             <h4 id="receiptEta" style="font-size:1.1rem; font-weight:700;">Within 3-5 Business Days</h4>
-           </div>
-           <div>
-             <p style="font-size:0.85rem; color:var(--gray-500); margin-bottom:4px;">Sender Origin</p>
-             <h4 id="receiptSender" style="font-size:1rem; font-weight:600;">Prime Routes HQ, TN</h4>
-           </div>
-           <div>
-             <p style="font-size:0.85rem; color:var(--gray-500); margin-bottom:4px;">Destination</p>
-             <h4 id="receiptReceiver" style="font-size:1rem; font-weight:600;">Pending Local Hub Arrival</h4>
-           </div>
-           <div style="grid-column:1/-1;">
-             <p style="font-size:0.85rem; color:var(--gray-500); margin-bottom:4px;">Shipment Details</p>
-             <h4 id="receiptDetails" style="font-size:1rem; font-weight:600;">Standard Freight Transport — Fully Insured</h4>
-           </div>
-         </div>
-         <div style="border-top:1px solid var(--gray-200); padding-top:24px; text-align:center; display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
-           <button class="btn btn-outline" style="color:var(--primary); border-color:var(--gray-300)" onclick="window.print()"><i class="fas fa-print"></i> Print Receipt</button>
-           <button class="btn btn-primary" onclick="alert('Live GPS tracking will be available once the package reaches the local distribution center.')"><i class="fas fa-map-marker-alt"></i> View Live Map</button>
-         </div>
+        <!-- Invoice Card -->
+        <div style="background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(10,22,40,0.13); margin-bottom:0;">
+
+          <!-- Invoice Header -->
+          <div style="background:linear-gradient(135deg,#0a1628 0%,#132744 100%); padding:32px 36px 24px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:20px;">
+            <div>
+              <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+                <div style="width:44px;height:44px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem;color:#0a1628;">PLC</div>
+                <div>
+                  <div style="color:#fff;font-size:1.25rem;font-weight:800;line-height:1;">Prime<span style="color:var(--accent);">Routes</span></div>
+                  <div style="color:rgba(255,255,255,0.5);font-size:0.72rem;letter-spacing:1px;text-transform:uppercase;">Logistics &amp; Freight</div>
+                </div>
+              </div>
+              <div style="color:rgba(255,255,255,0.5);font-size:0.8rem;margin-top:6px;">325 Maple Street, Nashville, TN 37203</div>
+              <div style="color:rgba(255,255,255,0.5);font-size:0.8rem;">info@primelogisticscargo.com &nbsp;|&nbsp; +1 (615) 555-0123</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="color:rgba(255,255,255,0.5);font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;">Shipment Invoice</div>
+              <div id="receiptCode" style="font-size:1.5rem;font-weight:800;font-family:monospace;color:var(--accent);margin:4px 0;"></div>
+              <div style="color:rgba(255,255,255,0.6);font-size:0.82rem;">Issued: <span id="receiptDate"></span></div>
+            </div>
+          </div>
+
+          <!-- Status Banner -->
+          <div id="receiptStatusBanner" style="padding:14px 36px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; background:#f0f4f8; border-bottom:2px solid #e2e8f0;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:10px;height:10px;border-radius:50%;background:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,0.2);" id="statusDot"></div>
+              <span style="font-size:0.8rem;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Current Status</span>
+            </div>
+            <h4 id="receiptStatus" style="font-size:1.1rem;font-weight:700;color:#1a73e8;display:flex;align-items:center;gap:8px;"></h4>
+          </div>
+
+          <!-- Main Body -->
+          <div style="padding:28px 36px;">
+
+            <!-- Sender / Receiver -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
+              <div style="background:#f8fafc;border-radius:12px;padding:20px;border-left:4px solid var(--accent);">
+                <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;margin-bottom:12px;font-weight:600;">Sender Information</div>
+                <div style="font-size:1rem;font-weight:700;color:#0a1628;" id="receiptSenderName">—</div>
+                <div style="font-size:0.85rem;color:#64748b;margin-top:4px;" id="receiptSenderEmail"></div>
+                <div style="font-size:0.85rem;color:#64748b;" id="receiptSenderPhone"></div>
+                <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e2e8f0;">
+                  <div style="font-size:0.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;">Origin</div>
+                  <div style="font-weight:600;color:#0a1628;" id="receiptSender">—</div>
+                </div>
+              </div>
+              <div style="background:#f8fafc;border-radius:12px;padding:20px;border-left:4px solid #1a73e8;">
+                <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;margin-bottom:12px;font-weight:600;">Receiver Information</div>
+                <div style="font-size:1rem;font-weight:700;color:#0a1628;" id="receiptReceiverName">—</div>
+                <div style="font-size:0.85rem;color:#64748b;margin-top:4px;" id="receiptReceiverEmail"></div>
+                <div style="font-size:0.85rem;color:#64748b;" id="receiptReceiverPhone"></div>
+                <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e2e8f0;">
+                  <div style="font-size:0.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;">Destination</div>
+                  <div style="font-weight:600;color:#0a1628;" id="receiptReceiver">—</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Shipment Details Grid -->
+            <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:24px;">
+              <div style="background:#f8fafc;padding:12px 20px;border-bottom:1px solid #e2e8f0;">
+                <span style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:#64748b;font-weight:700;">Shipment Details</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0;">
+                <div style="padding:16px 20px;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;">
+                  <div style="font-size:0.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Shipment Type</div>
+                  <div style="font-weight:700;color:#0a1628;" id="receiptType">—</div>
+                </div>
+                <div style="padding:16px 20px;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;">
+                  <div style="font-size:0.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Weight / Piece</div>
+                  <div style="font-weight:700;color:#0a1628;" id="receiptWeight">—</div>
+                </div>
+                <div style="padding:16px 20px;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;">
+                  <div style="font-size:0.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Ship Date</div>
+                  <div style="font-weight:700;color:#0a1628;" id="receiptShipDate">—</div>
+                </div>
+                <div style="padding:16px 20px;border-bottom:1px solid #e2e8f0;">
+                  <div style="font-size:0.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Est. Delivery</div>
+                  <div style="font-weight:700;color:#0a1628;" id="receiptEta">—</div>
+                </div>
+                <div style="padding:16px 20px;grid-column:1/-1;">
+                  <div style="font-size:0.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Additional Notes / Details</div>
+                  <div style="font-weight:600;color:#0a1628;" id="receiptDetails">—</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Waypoints / Timeline -->
+            <div id="receiptWaypointsSection" style="display:none;margin-bottom:24px;">
+              <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+                <div style="background:#f8fafc;padding:12px 20px;border-bottom:1px solid #e2e8f0;">
+                  <span style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:#64748b;font-weight:700;"><i class="fas fa-route" style="color:var(--accent);margin-right:6px;"></i>Route Waypoints</span>
+                </div>
+                <div id="receiptWaypointsList" style="padding:16px 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;"></div>
+              </div>
+            </div>
+
+            <div id="receiptTimelineSection" style="display:none;margin-bottom:24px;">
+              <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+                <div style="background:#f8fafc;padding:12px 20px;border-bottom:1px solid #e2e8f0;">
+                  <span style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:#64748b;font-weight:700;"><i class="fas fa-history" style="color:#1a73e8;margin-right:6px;"></i>Shipment Timeline</span>
+                </div>
+                <div id="receiptTimelineList" style="padding:16px 20px;"></div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div style="border-top:1px solid #e2e8f0;padding-top:20px;display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;">
+              <button class="btn btn-outline" style="color:var(--primary);border-color:var(--gray-300);" onclick="window.print()"><i class="fas fa-print"></i> Print Invoice</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Google Map — Always visible below invoice -->
+        <div style="margin-top:24px;border-radius:16px;overflow:hidden;box-shadow:0 8px 30px rgba(10,22,40,0.1);">
+          <div style="background:#0a1628;padding:14px 20px;display:flex;align-items:center;gap:10px;">
+            <i class="fas fa-map-marked-alt" style="color:var(--accent);"></i>
+            <span style="color:#fff;font-weight:600;font-size:0.95rem;">Live Package Location</span>
+            <span id="mapLocationLabel" style="color:rgba(255,255,255,0.5);font-size:0.8rem;margin-left:auto;"></span>
+          </div>
+          <div id="liveMapDiv" style="width:100%;height:420px;display:block;background:#e8edf4;"></div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -154,10 +246,10 @@
     <div class="footer-grid">
       <div class="footer-brand">
         <a href="#" class="nav-logo" style="margin-bottom:8px">
-          <div class="nav-logo-icon">PR</div>
-          <div class="nav-logo-text">Prime<span>Routes</span></div>
+          <div class="nav-logo-icon" style="background:transparent; padding:0;"><img src="logo.svg" style="width:100%;height:100%;object-fit:contain;border-radius:12px;"></div>
+          <div class="nav-logo-text">Prime<span>Logistics Cargo</span></div>
         </a>
-        <p>Prime Route Logistics — your trusted partner for global shipping, freight, pet transportation, and warehouse solutions. Delivering excellence since day one.</p>
+        <p>Prime Logistics Cargo — your trusted partner for global shipping, freight, pet transportation, and warehouse solutions. Delivering excellence since day one.</p>
       </div>
       <div>
         <h4>Quick Links</h4>
@@ -187,7 +279,7 @@
         </div>
         <div class="footer-contact-item">
           <div class="fci-icon"><i class="fas fa-envelope"></i></div>
-          <p>info@primerouteslogistic.com</p>
+          <p>info@primelogisticscargo.com</p>
         </div>
         <div class="footer-contact-item">
           <div class="fci-icon"><i class="fas fa-phone"></i></div>
@@ -196,7 +288,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <p>&copy; 2025 Prime Routes Logistics. All Rights Reserved.</p>
+      <p>&copy; 2025 Prime Logistics Cargo. All Rights Reserved.</p>
       <div class="footer-socials">
         <a href="#"><i class="fab fa-facebook-f"></i></a>
         <a href="#"><i class="fab fa-twitter"></i></a>
@@ -207,9 +299,30 @@
   </div>
 </footer>
 
-<!-- Back to Top -->
-<button class="back-to-top" id="backToTop"><i class="fas fa-chevron-up"></i></button>
 
+
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBpxYpVUtQlXjQgBCJNDvLkADlgTQ9IbLs&libraries=geometry"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-init.js"></script>
 <script src="script.js"></script>
+
+  <!-- Globe / Google Translate Widget -->
+  <div id="google_translate_element" style="display:none; position:fixed; bottom:90px; left:24px; z-index:99999; background:#fff; padding:10px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.2);"></div>
+  <div id="globeBtn" onclick="toggleTranslate()" style="position:fixed; bottom:24px; left:24px; z-index:99999; cursor:pointer; background:transparent; width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:transform 0.3s ease;">
+    <i class="fas fa-earth-africa" style="color:#e8a924; font-size:58px; filter:drop-shadow(0 4px 8px rgba(0,0,0,0.2));"></i>
+  </div>
+  <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+  <script>
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({pageLanguage:'en', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
+    }
+    function toggleTranslate() {
+      var gt = document.getElementById('google_translate_element');
+      gt.style.display = (gt.style.display === 'none' || gt.style.display === '') ? 'block' : 'none';
+    }
+    document.getElementById('globeBtn').addEventListener('mouseenter', function(){ this.style.transform='scale(1.1)'; });
+    document.getElementById('globeBtn').addEventListener('mouseleave', function(){ this.style.transform='scale(1)'; });
+  </script>
 </body>
 </html>

@@ -1,7 +1,21 @@
 // admin.js
 
-let shipments = JSON.parse(localStorage.getItem('primeRoutes_shipments')) || [];
-let messages = JSON.parse(localStorage.getItem('primeRoutes_contacts')) || [];
+let shipments = [];
+let messages = [];
+
+async function fetchAdminData() {
+  try {
+    const { data: sData } = await sb.from('shipments').select('*').order('created_at', { ascending: false });
+    if (sData) shipments = sData;
+
+    const { data: mData } = await sb.from('contacts').select('*').order('date', { ascending: false });
+    if (mData) messages = mData;
+
+    initDashboard();
+  } catch (e) {
+    console.error('Error fetching admin data:', e);
+  }
+}
 
 function loginAdmin() {
   const pw = document.getElementById('adminPassword').value;
@@ -9,7 +23,7 @@ function loginAdmin() {
     document.getElementById('loginOverlay').style.display = 'none';
     document.getElementById('adminLayout').style.display = 'flex';
     sessionStorage.setItem('adminLogged', 'true');
-    initDashboard();
+    fetchAdminData();
   } else {
     document.getElementById('loginError').style.display = 'block';
   }
@@ -24,7 +38,7 @@ function logoutAdmin() {
 if(sessionStorage.getItem('adminLogged') === 'true') {
   document.getElementById('loginOverlay').style.display = 'none';
   document.getElementById('adminLayout').style.display = 'flex';
-  initDashboard();
+  fetchAdminData();
 }
 
 // Clock
@@ -76,16 +90,35 @@ function renderShipments() {
   
   tbody.innerHTML = '';
   
-  shipments.filter(s => s.id.toLowerCase().includes(search) || s.sender.toLowerCase().includes(search) || s.receiver.toLowerCase().includes(search)).forEach((s, index) => {
+  const filtered = shipments.filter(s => {
+    const id = (s.id || '').toLowerCase();
+    const sender = (s.senderName || s.sender || '').toLowerCase();
+    const receiver = (s.receiverName || s.receiver || '').toLowerCase();
+    const origin = (s.origin || '').toLowerCase();
+    const dest = (s.destination || '').toLowerCase();
+    return id.includes(search) || sender.includes(search) || receiver.includes(search) || origin.includes(search) || dest.includes(search);
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">No shipments found.</td></tr>';
+    return;
+  }
+
+  filtered.forEach((s, index) => {
+    const actualIndex = shipments.indexOf(s);
+    const origin = s.origin || s.sender || '—';
+    const dest = s.destination || s.receiver || '—';
+    const eta = s.expectedDate ? new Date(s.expectedDate).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : (s.eta || '—');
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><strong>${s.id}</strong></td>
-      <td>${s.sender}</td>
-      <td>${s.receiver}</td>
+      <td><strong style="font-family:monospace; color:var(--accent);">${s.id}</strong></td>
+      <td>${s.senderName || s.sender || '—'}</td>
+      <td>${s.receiverName || s.receiver || '—'}</td>
       <td>${getStatusBadge(s.status)}</td>
+      <td style="color:#666; font-size:0.85rem;">${eta}</td>
       <td>
-        <button class="btn-action" onclick="editShipment(${index})" title="Edit"><i class="fas fa-edit"></i></button>
-        <button class="btn-action delete" onclick="deleteShipment(${index})" title="Delete"><i class="fas fa-trash"></i></button>
+        <button class="btn-action" onclick="editShipment(${actualIndex})" title="Edit"><i class="fas fa-edit"></i></button>
+        <button class="btn-action delete" onclick="deleteShipment(${actualIndex})" title="Delete"><i class="fas fa-trash"></i></button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -103,12 +136,13 @@ function renderRecent() {
 
   // Show last 5
   shipments.slice(-5).reverse().forEach(s => {
+    const eta = s.expectedDate ? new Date(s.expectedDate).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : (s.eta || '—');
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><strong>${s.id}</strong></td>
+      <td><strong style="font-family:monospace; color:var(--accent);">${s.id}</strong></td>
       <td>${getStatusBadge(s.status)}</td>
-      <td>${s.receiver}</td>
-      <td>${s.eta}</td>
+      <td>${s.receiverName || s.receiver || '—'}</td>
+      <td>${eta}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -140,20 +174,15 @@ function renderMessages() {
   });
 }
 
-function deleteMessage(index) {
+async function deleteMessage(index) {
   if(confirm('Are you sure you want to delete this message?')) {
-    // We sorted the array, so we need to find the actual index in the main array.
-    // Actually, simplest is just re-filter or operate on the original using a unique ID, 
-    // but since we just reversed/sorted it, let's rebuild the array.
     const sortedMsg = [...messages].sort((a,b) => new Date(b.date) - new Date(a.date));
     const target = sortedMsg[index];
-    const originalIndex = messages.findIndex(m => m.date === target.date);
     
-    if(originalIndex > -1) {
-      messages.splice(originalIndex, 1);
-      localStorage.setItem('primeRoutes_contacts', JSON.stringify(messages)); 
-      initDashboard();
+    if (target && target.id) {
+      await sb.from('contacts').delete().eq('id', target.id);
     }
+    fetchAdminData();
   }
 }
 
@@ -186,7 +215,7 @@ function openModal() {
   document.getElementById('shipmentForm').reset();
   document.getElementById('shipmentIndex').value = '';
   document.getElementById('modalTitle').textContent = 'Add New Shipment';
-  document.getElementById('shipId').value = 'PR-' + Math.floor(100000 + Math.random() * 900000);
+  document.getElementById('shipId').value = 'PLC-' + Math.floor(100000 + Math.random() * 900000);
   document.getElementById('waypointsList').innerHTML = '';
   document.getElementById('timelineList').innerHTML = '';
   document.getElementById('shipmentModal').classList.add('active');
@@ -228,16 +257,22 @@ function editShipment(index) {
   document.getElementById('shipmentModal').classList.add('active');
 }
 
-function deleteShipment(index) {
+async function deleteShipment(index) {
   if(confirm('Are you sure you want to delete this shipment? This action cannot be undone.')) {
-    shipments.splice(index, 1);
-    saveShipments();
+    const s = shipments[index];
+    await sb.from('shipments').delete().eq('id', s.id);
+    fetchAdminData();
   }
 }
 
-document.getElementById('shipmentForm').addEventListener('submit', function(e) {
+document.getElementById('shipmentForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   
+  const submitBtn = this.querySelector('button[type="submit"]');
+  const originalText = submitBtn.innerHTML;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+  submitBtn.disabled = true;
+
   const waypoints = Array.from(document.querySelectorAll('.waypoint-item')).map(item => ({
     location: item.querySelector('.wp-input').value,
     pause: item.querySelector('.wp-pause').checked
@@ -269,28 +304,77 @@ document.getElementById('shipmentForm').addEventListener('submit', function(e) {
     details: document.getElementById('shipDetails').value,
     waypoints: waypoints,
     timeline: timeline,
-    sender: document.getElementById('shipSenderName').value, // fallback for legacy
-    receiver: document.getElementById('shipReceiverName').value, // fallback for legacy
-    eta: document.getElementById('shipExpectedDate').value // fallback for legacy
+    sender: document.getElementById('shipSenderName').value,
+    receiver: document.getElementById('shipReceiverName').value,
+    eta: document.getElementById('shipExpectedDate').value
   };
 
   const idx = document.getElementById('shipmentIndex').value;
-  if(idx === '') {
-    // Check if ID already exists
-    if(shipments.find(s => s.id === sData.id)) {
-      alert('Tracking ID already exists! Please use a unique ID.');
-      return;
+  try {
+    if(idx === '') {
+      // Check if ID already exists
+      const { data: existing } = await sb.from('shipments').select('id').eq('id', sData.id).single();
+      if(existing) {
+        alert('Tracking ID already exists! Please use a unique ID.');
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+        return;
+      }
+      await sb.from('shipments').insert([sData]);
+      sendShipmentEmail(sData, 'created');
+    } else {
+      await sb.from('shipments').update(sData).eq('id', sData.id);
+      sendShipmentEmail(sData, 'updated');
     }
-    shipments.push(sData);
-  } else {
-    shipments[idx] = sData;
+  } catch (err) {
+    console.error('Error saving shipment:', err);
+    alert('Failed to save shipment.');
   }
   
-  saveShipments();
+  submitBtn.innerHTML = originalText;
+  submitBtn.disabled = false;
   closeModal();
+  fetchAdminData();
 });
 
-function saveShipments() {
-  localStorage.setItem('primeRoutes_shipments', JSON.stringify(shipments));
-  initDashboard();
+// --- Email Notification Logic ---
+function sendShipmentEmail(shipmentData, type) {
+  // Configured with your EmailJS credentials
+  const serviceID = "service_wz4szqe";
+  // Using the first template for creation, and the second for updates
+  const templateID = type === 'created' ? "template_0pxhlex" : "template_6r5tfk1";
+  
+  const templateParams = {
+    tracking_id: shipmentData.id,
+    status: shipmentData.status,
+    sender_name: shipmentData.senderName,
+    receiver_name: shipmentData.receiverName,
+    origin: shipmentData.origin,
+    destination: shipmentData.destination,
+    update_type: type === 'created' ? 'Shipment Created' : 'Status Update',
+    message: type === 'created' ? 
+      `Your shipment ${shipmentData.id} has been successfully created and is currently ${shipmentData.status}. Track it on our website.` : 
+      `The status of your shipment ${shipmentData.id} has been officially updated to: ${shipmentData.status}.`
+  };
+
+  // 1. Send to Sender
+  if(shipmentData.senderEmail && shipmentData.senderEmail.trim() !== '') {
+    emailjs.send(serviceID, templateID, {
+      ...templateParams,
+      to_email: shipmentData.senderEmail,
+      to_name: shipmentData.senderName
+    }).then(res => console.log('Email successfully sent to Sender!', res.status))
+      .catch(err => console.error('Failed to send Sender email:', err));
+  }
+
+  // 2. Send to Receiver
+  if(shipmentData.receiverEmail && shipmentData.receiverEmail.trim() !== '') {
+    emailjs.send(serviceID, templateID, {
+      ...templateParams,
+      to_email: shipmentData.receiverEmail,
+      to_name: shipmentData.receiverName
+    }).then(res => console.log('Email successfully sent to Receiver!', res.status))
+      .catch(err => console.error('Failed to send Receiver email:', err));
+  }
 }
+
