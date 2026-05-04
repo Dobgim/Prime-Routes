@@ -458,7 +458,7 @@ async function handleMainTrack() {
   } catch (err) {
     if(btn) { btn.innerHTML = originalText; btn.disabled = false; }
     errorMsg.style.display = 'block';
-    errorMsg.textContent = 'Connection error. Please check your internet and try again.';
+    errorMsg.textContent = 'Error: ' + (err.message || String(err));
     console.error('Track error:', err);
   }
 }
