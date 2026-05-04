@@ -337,14 +337,6 @@ async function handleMainTrack() {
   const originalText = btn ? btn.innerHTML : '';
   if(btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Locating...'; btn.disabled = true; }
 
-  // Check if Supabase client exists
-  if (typeof sb === 'undefined') {
-    if(btn) { btn.innerHTML = originalText; btn.disabled = false; }
-    errorMsg.style.display = 'block';
-    errorMsg.textContent = 'Connection error. Please refresh and try again.';
-    return;
-  }
-
   try {
     // Query directly via REST API to bypass any client library issues
     const SUPABASE_URL = 'https://urkuukjazppankjsiyjx.supabase.co';
