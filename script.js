@@ -346,17 +346,22 @@ async function handleMainTrack() {
   }
 
   try {
-    const { data: results, error } = await sb.from('shipments').select('*').ilike('id', code);
+    // Query directly via REST API to bypass any client library issues
+    const SUPABASE_URL = 'https://urkuukjazppankjsiyjx.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVya3V1a2phenBwYW5ranNpeWp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4OTQwOTcsImV4cCI6MjA5MzQ3MDA5N30.hHo-urTvu3qo1Qod4DitNp6IFbPR_y-vpC5GlD2EyGs';
+    const response = await fetch(
+      `${SUPABASE_URL}/rest/v1/shipments?id=ilike.${encodeURIComponent(code)}&select=*`,
+      {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
     if(btn) { btn.innerHTML = originalText; btn.disabled = false; }
-
-    if (error) {
-      errorMsg.style.display = 'block';
-      errorMsg.textContent = 'Database error. Please try again.';
-      console.error('Supabase error:', error);
-      return;
-    }
-
-    const found = (results && results.length > 0) ? results[0] : null;
+    const results = await response.json();
+    const found = (Array.isArray(results) && results.length > 0) ? results[0] : null;
 
     const codeDisplay        = document.getElementById('receiptCode');
     const dateDisplay        = document.getElementById('receiptDate');
