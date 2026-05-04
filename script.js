@@ -563,7 +563,7 @@ function startBusAnimation() {
     } else {
       stopBusAnimation();
     }
-  }, 280);
+  }, 1000); // Increased from 280 to 1000 to slow down the cargo bus speed
 }
 
 function initLiveMap(found, code) {
@@ -600,9 +600,42 @@ function initLiveMap(found, code) {
     travelMode: google.maps.TravelMode.DRIVING
   }, (result, status) => {
     if (status !== 'OK') {
-      // Fallback geocode
-      new google.maps.Geocoder().geocode({ address: destination }, (res, st) => {
-        if (st === 'OK' && liveMap) liveMap.setCenter(res[0].geometry.location);
+      // Fallback: Driving route impossible (e.g. Overseas). Draw a straight flight-path line.
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ address: origin }, (resOrigin, stOrigin) => {
+        if (stOrigin === 'OK') {
+          geocoder.geocode({ address: destination }, (resDest, stDest) => {
+            if (stDest === 'OK') {
+              const startLoc = resOrigin[0].geometry.location;
+              const endLoc = resDest[0].geometry.location;
+              
+              // Create a straight line path with a few intermediate points for animation
+              routePath = [];
+              const steps = 100;
+              for(let i=0; i<=steps; i++) {
+                routePath.push(google.maps.geometry.spherical.interpolate(startLoc, endLoc, i/steps));
+              }
+
+              // Draw straight dashed line
+              new google.maps.Polyline({
+                path: [startLoc, endLoc],
+                geodesic: true,
+                strokeColor: '#e8a924',
+                strokeOpacity: 0.85,
+                strokeWeight: 4,
+                map: liveMap
+              });
+
+              // Fit map bounds to show both origin and destination
+              const bounds = new google.maps.LatLngBounds();
+              bounds.extend(startLoc);
+              bounds.extend(endLoc);
+              liveMap.fitBounds(bounds);
+              
+              drawMarkersAndBus(startLoc, endLoc, origin, destination);
+            }
+          });
+        }
       });
       return;
     }
@@ -615,11 +648,18 @@ function initLiveMap(found, code) {
     }).setDirections(result);
 
     routePath = result.routes[0].overview_path;
+    const startLoc = routePath[0];
+    const endLoc = routePath[routePath.length - 1];
+    
+    drawMarkersAndBus(startLoc, endLoc, origin, destination);
+  });
+
+  function drawMarkersAndBus(startLoc, endLoc, originText, destText) {
     if (currentStep >= routePath.length) currentStep = Math.max(0, routePath.length - 2);
 
     // Origin pin
     new google.maps.Marker({
-      position: routePath[0], map: liveMap, title: 'Origin: ' + origin,
+      position: startLoc, map: liveMap, title: 'Origin: ' + originText,
       icon: { path: google.maps.SymbolPath.CIRCLE, scale: 11,
         fillColor: '#2ecc71', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2.5 },
       label: { text: 'A', color: '#fff', fontWeight: 'bold', fontSize: '11px' }
@@ -627,16 +667,16 @@ function initLiveMap(found, code) {
 
     // Destination pin
     new google.maps.Marker({
-      position: routePath[routePath.length - 1], map: liveMap, title: 'Destination: ' + destination,
+      position: endLoc, map: liveMap, title: 'Destination: ' + destText,
       icon: { path: google.maps.SymbolPath.CIRCLE, scale: 11,
         fillColor: '#e74c3c', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2.5 },
       label: { text: 'B', color: '#fff', fontWeight: 'bold', fontSize: '11px' }
     });
 
     // Cargo bus marker at saved position
-    const startPos = routePath[Math.max(0, currentStep)];
+    const busPos = routePath[Math.max(0, currentStep)];
     busMarker = new google.maps.Marker({
-      position: startPos, map: liveMap, title: '🚛 Your Package',
+      position: busPos, map: liveMap, title: '🚛 Your Package',
       icon: {
         url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(CARGO_SVG),
         scaledSize: new google.maps.Size(72, 42),
@@ -645,17 +685,13 @@ function initLiveMap(found, code) {
       zIndex: 999
     });
 
-    liveMap.panTo(startPos);
-    liveMap.setZoom(6);
-
     // Start or pause based on shipment status
     const statusLower = (found.status || '').toLowerCase();
     const isMoving = statusLower.includes('transit') || statusLower.includes('out for') || statusLower.includes('delivery');
     if (isMoving) {
       startBusAnimation();
     }
-    // On Hold / Pending / Delivered: bus stays frozen at current position
-  });
+  }
 }
 
 /* ========== WIDGETS NOW HARDCODED IN HTML PAGES ========== */
