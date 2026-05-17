@@ -175,20 +175,37 @@ function renderRecent() {
   tbody.innerHTML = '';
 
   if (shipments.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:#999;">No shipments added yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">No shipments added yet.</td></tr>';
     return;
   }
 
   shipments.slice(0, 5).forEach(s => {
+    const actualIndex = shipments.indexOf(s);
     const eta = s.expectedDate
       ? new Date(s.expectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       : (s.eta || '—');
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><strong style="font-family:monospace; color:var(--accent, #e8a924);">${s.id}</strong></td>
-      <td>${getStatusBadge(s.status)}</td>
+      <td>${getStatusBadge(s.status, s.id)}</td>
       <td>${s.receiverName || s.receiver || '—'}</td>
       <td>${eta}</td>
+      <td>
+        <div class="action-group">
+          <button class="btn-action status" onclick="openQuickStatus('${s.id}')" title="Quick status change">
+            <i class="fas fa-bolt"></i>
+          </button>
+          <button class="btn-action edit" onclick="editShipment(${actualIndex})" title="Edit shipment">
+            <i class="fas fa-pencil-alt"></i>
+          </button>
+          <button class="btn-action" onclick="viewShipment(${actualIndex})" title="View shipment">
+            <i class="fas fa-eye"></i>
+          </button>
+          <button class="btn-action delete" onclick="openDeleteModal('${s.id}')" title="Delete shipment">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </td>
     `;
     tbody.appendChild(tr);
   });
@@ -299,6 +316,80 @@ function editShipment(index) {
   if (s.timeline) s.timeline.forEach(t => addTimelineEvent(t.date, t.time, t.desc));
 
   document.getElementById('shipmentModal').classList.add('active');
+}
+
+// ─── View Modal ───────────────────────────────────────────────────
+function viewShipment(index) {
+  const s = shipments[index];
+  if (!s) return;
+
+  const body = document.getElementById('viewModalBody');
+  const dFormat = (dt) => dt ? new Date(dt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—';
+  
+  body.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h3 style="font-family:monospace; color:#e8a924; font-size:1.4rem; letter-spacing:1px; margin:0;">${s.id}</h3>
+      ${getStatusBadge(s.status, s.id)}
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; background:#f8f9fa; padding:15px; border-radius:8px;">
+      <div>
+        <p style="font-size:0.8rem; color:#888; margin-bottom:4px; text-transform:uppercase;">Sender</p>
+        <p style="font-weight:600; margin-bottom:4px;">${s.senderName || s.sender || '—'}</p>
+        <p style="font-size:0.9rem; color:#555;">${s.senderEmail || '—'}</p>
+        <p style="font-size:0.9rem; color:#555;">${s.senderPhone || '—'}</p>
+      </div>
+      <div>
+        <p style="font-size:0.8rem; color:#888; margin-bottom:4px; text-transform:uppercase;">Receiver</p>
+        <p style="font-weight:600; margin-bottom:4px;">${s.receiverName || s.receiver || '—'}</p>
+        <p style="font-size:0.9rem; color:#555;">${s.receiverEmail || '—'}</p>
+        <p style="font-size:0.9rem; color:#555;">${s.receiverPhone || '—'}</p>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:20px;">
+      <div>
+        <p style="font-size:0.8rem; color:#888; margin-bottom:4px;">Origin</p>
+        <p style="font-weight:600;">${s.origin || '—'}</p>
+      </div>
+      <div>
+        <p style="font-size:0.8rem; color:#888; margin-bottom:4px;">Destination</p>
+        <p style="font-weight:600;">${s.destination || '—'}</p>
+      </div>
+      <div>
+        <p style="font-size:0.8rem; color:#888; margin-bottom:4px;">Ship Date</p>
+        <p style="font-weight:600;">${dFormat(s.shipDate)}</p>
+      </div>
+      <div>
+        <p style="font-size:0.8rem; color:#888; margin-bottom:4px;">Expected Delivery</p>
+        <p style="font-weight:600;">${dFormat(s.expectedDate || s.eta)}</p>
+      </div>
+      <div>
+        <p style="font-size:0.8rem; color:#888; margin-bottom:4px;">Type / Weight</p>
+        <p style="font-weight:600;">${s.type || '—'} / ${s.weight ? s.weight + ' kg' : '—'}</p>
+      </div>
+      <div>
+        <p style="font-size:0.8rem; color:#888; margin-bottom:4px;">Piece Type</p>
+        <p style="font-weight:600;">${s.pieceType || '—'}</p>
+      </div>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <p style="font-size:0.8rem; color:#888; margin-bottom:6px;">Package Description</p>
+      <p style="color:#333; line-height:1.5;">${s.details || 'No description provided.'}</p>
+    </div>
+  `;
+
+  document.getElementById('viewEditBtn').onclick = () => {
+    closeViewModal();
+    editShipment(index);
+  };
+  
+  document.getElementById('viewModal').classList.add('active');
+}
+
+function closeViewModal() {
+  document.getElementById('viewModal').classList.remove('active');
 }
 
 // ─── Quick Status Modal ───────────────────────────────────────────
