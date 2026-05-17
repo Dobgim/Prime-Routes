@@ -527,8 +527,9 @@ function saveMapProgress(code, step) {
 }
 
 function getMapProgress(code) {
-  const data = JSON.parse(localStorage.getItem('primeRoutes_mapProgress') || '{}');
-  return data[code] || 0;
+  // Always start the animation from the beginning when the page is loaded
+  // to ensure the user gets to see the bus moving while it's in transit.
+  return 0;
 }
 
 let animationFrameId = null;

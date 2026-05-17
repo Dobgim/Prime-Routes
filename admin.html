@@ -42,6 +42,17 @@
 
     <!-- Main Content -->
     <main class="main-content">
+      <!-- Customer Service Bar -->
+      <div class="cs-bar">
+        <div class="cs-bar-left">
+          <i class="fas fa-headset" style="color:#e8a924;"></i>
+          <span>Need help? Our customer support team is available 24/7</span>
+        </div>
+        <a href="tel:+14058735027" class="cs-bar-phone">
+          <i class="fas fa-phone-alt"></i>
+          +1 (405) 873-5027
+        </a>
+      </div>
       <header class="top-header">
         <h1 id="pageTitle">Dashboard Overview</h1>
         <div class="header-right">
@@ -105,11 +116,11 @@
               <thead>
                 <tr>
                   <th>Tracking ID</th>
-                  <th>Sender Name</th>
-                  <th>Receiver Name</th>
+                  <th>Sender</th>
+                  <th>Receiver</th>
                   <th>Status</th>
-                  <th>Expected Delivery</th>
-                  <th>Actions</th>
+                  <th>Est. Delivery</th>
+                  <th style="min-width:210px;">Actions</th>
                 </tr>
               </thead>
               <tbody></tbody>
@@ -137,6 +148,47 @@
 
       </div>
     </main>
+  </div>
+
+  <!-- Quick Status Modal -->
+  <div id="quickStatusModal" class="modal-overlay">
+    <div class="modal-box sm">
+      <div class="modal-header">
+        <h2><i class="fas fa-bolt" style="color:#e8a924;margin-right:8px;"></i>Quick Status Update</h2>
+        <span class="close-modal" onclick="closeQuickStatus()">&#x2715;</span>
+      </div>
+      <div class="modal-body">
+        <p style="color:#666; font-size:0.9rem; margin-bottom:12px;">Updating status for:</p>
+        <div class="qs-tracking-id" id="qsTrackingId"></div>
+        <p style="font-size:0.85rem; color:#888; margin-bottom:16px;">Select the new package status:</p>
+        <div class="qs-status-grid" id="qsStatusGrid"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeQuickStatus()">Cancel</button>
+        <button class="btn-save" onclick="applyQuickStatus()" id="qsSaveBtn">
+          <i class="fas fa-check"></i> Update Status
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal-overlay">
+    <div class="modal-box sm">
+      <div class="modal-body" style="text-align:center; padding:40px 30px;">
+        <div class="del-icon"><i class="fas fa-trash-alt"></i></div>
+        <h3 style="color:#0a1628; margin-bottom:10px; font-size:1.2rem;">Delete Shipment?</h3>
+        <p style="color:#666; font-size:0.9rem; margin-bottom:6px;">You are about to permanently delete:</p>
+        <div class="qs-tracking-id" id="delTrackingId"></div>
+        <p style="color:#999; font-size:0.82rem; margin-top:10px;">This action <strong>cannot be undone</strong>. All shipment data will be removed.</p>
+      </div>
+      <div class="modal-footer" style="justify-content:center;">
+        <button class="btn-cancel" onclick="closeDeleteModal()"><i class="fas fa-times"></i> Cancel</button>
+        <button class="btn-save btn-confirm-delete" id="delConfirmBtn" onclick="confirmDelete()">
+          <i class="fas fa-trash"></i> Yes, Delete
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Add/Edit Modal -->
@@ -276,7 +328,7 @@
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+            <button type="button" class="btn-cancel" onclick="closeModal()"><i class="fas fa-times"></i> Cancel</button>
             <button type="submit" class="btn-save"><i class="fas fa-save"></i> Save Shipment</button>
           </div>
         </form>
